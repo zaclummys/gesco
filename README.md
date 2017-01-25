@@ -50,12 +50,13 @@ gesco.set({
 
 ## API
 
-##### gesco.get(path)
+##### gesco.get()
 ```js
 // Getting data stored
 gesco.get();
 ```
 
+##### gesco.get(path)
 ```js
 // Getting data in specific path
 gesco.get('user.name');
@@ -111,7 +112,7 @@ gesco.observe('user.name', function (newName) {
 
 ##### gesco.compute(path, computer)
 ```js
-// Add a computer that watch and preprocess data
+// Adding a computer that watch and preprocess data
 gesco.compute('user.name', function (name) {
   //capitalizing the name
   return name.replace(/\b\w/g, x => x.toUpperCase());
@@ -120,7 +121,7 @@ gesco.compute('user.name', function (name) {
 
 ##### gesco.compute(path, observerPath, computer)
 ```js
-// Add a computer that watch a specific path and its result is stored as another path
+// Adding a computer that watch a specific path and its result is stored as another path
 gesco.compute('user.nameWithoutSpaces', 'user.name', function (name) {
   return name.replace(/\s/g, '');
 });
@@ -128,16 +129,16 @@ gesco.compute('user.nameWithoutSpaces', 'user.name', function (name) {
 
 ##### gesco.emit(path)
 ```js
-// Push item to array (without side-effects)
+// Pushing item to array (without side-effects)
 gesco.get('user.friends').push('John Troe');
 
-//Notify changes to activate observers
+//Notifying changes to activate observers
 gesco.emit('user.friends');
 ```
 
 ##### gesco.emit(path, callback)
 ```js
-// Execute callback, then notify changes to activate observers
+// Executing callback, then notifying changes to activate observers
 gesco.emit('user.friends', function (friends) {
   friends.push('John Troe');
 });
@@ -145,7 +146,7 @@ gesco.emit('user.friends', function (friends) {
 
 ##### gesco.toString()
 ```js
-// Return data processed by JSON.stringify
+// Returning data processed by JSON.stringify
 gesco.toString();
 ```
 
