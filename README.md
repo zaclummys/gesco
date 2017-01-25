@@ -129,7 +129,7 @@ gesco.compute('user.nameWithoutSpaces', 'user.name', function (name) {
 ##### gesco.emit(path)
 ```js
 // Push item to array (without side-effects)
-gesco.get('friends').push('John Troe');
+gesco.get('user.friends').push('John Troe');
 
 //Notify changes to activate observers
 gesco.emit('user.friends');
