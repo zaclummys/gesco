@@ -52,13 +52,13 @@ gesco.set({
 
 ##### gesco.get(path)
 ```js
-// Getting data in specific path
-gesco.get('user.name');
+// Getting data stored
+gesco.get();
 ```
 
 ```js
-// Getting data stored
-gesco.get();
+// Getting data in specific path
+gesco.get('user.name');
 ```
 
 ##### gesco.set(path, value)
@@ -101,13 +101,6 @@ gesco.observe('user.name', function (newName) {
 });
 ```
 ```js
-// Adding an observer to watch "user" modifications
-gesco.observe('user', function (user) {
-  console.log('user changed', user);
-});
-```
-
-```js
 // Adding multiples observers to watch "user.name" modifications
 gesco.observe('user.name', function (newName) {
   console.log('the user has changed him name to', newName);
@@ -115,7 +108,6 @@ gesco.observe('user.name', function (newName) {
   console.log('the new name -', newName, '- is cool!');
 });
 ```
-
 
 ##### gesco.compute(path, computer)
 ```js
@@ -128,7 +120,7 @@ gesco.compute('user.name', function (name) {
 
 ##### gesco.compute(path, observerPath, computer)
 ```js
-// Add a computer that watch a specific path and the result is stored as another path
+// Add a computer that watch a specific path and its result is stored as another path
 gesco.compute('user.nameWithoutSpaces', 'user.name', function (name) {
   return name.replace(/\s/g, '');
 });
@@ -155,6 +147,14 @@ gesco.emit('user.friends', function (friends) {
 ```js
 // Return data processed by JSON.stringify
 gesco.toString();
+```
+
+## Path
+It can be array or strings (using dots)
+```js
+gesco.get(['user', 'name']);
+//or
+gesco.get('user.name');
 ```
 
 ## License
