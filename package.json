@@ -1,12 +1,13 @@
 {
   "name": "gesco",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Easy data manipulation to get, set, observe and compute",
   "main": "dist/gesco.js",
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-uglify": "^2.0.1",
-    "pump": "^1.0.2"
+    "pump": "^1.0.2",
+    "standard": "^8.6.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
