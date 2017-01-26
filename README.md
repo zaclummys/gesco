@@ -1,6 +1,6 @@
 # gesco [![npm version](https://img.shields.io/npm/v/gesco.svg?style=flat-square)](https://www.npmjs.org/package/gesco) [![npm downloads](https://img.shields.io/npm/dm/gesco.svg?style=flat-square)](http://npm-stat.com/charts.html?package=gesco)
 
-Easy data manipulation to get, set, observe and compute
+Easy data manipulation to **get**, **set**, **observe** and **compute**
 
 ## Installing
 
