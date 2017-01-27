@@ -1,359 +1,154 @@
-/* global define, module, exports */
-(function (root, factory) {
-  if (typeof exports === 'object' && typeof module === 'object') {
-    module.exports = factory()
-  } else if (typeof define === 'function' && define.amd) {
-    define([], factory)
-  } else if (typeof exports === 'object') {
-    exports.Gesco = factory()
-  } else {
-    root.Gesco = factory()
-  }
-})(this, function () {
-  'use strict'
+'use strict';
 
-  var DELIMITER = '.'
+const isFunction = require('./is-function');
+const isObject = require('./is-object');
 
-  function is (entry) {
-    return Object.prototype.toString.call(entry)
-  };
+const args = require('./args');
 
-  function isArray (entry) {
-    return is(entry) === '[object Array]'
-  };
+const map = require('./map');
+const search = require('./search');
 
-  function isObject (entry) {
-    return is(entry) === '[object Object]'
-  };
+const setProperty = require('./set-property');
+const getProperty = require('./get-property');
 
-  function isFunction (entry) {
-    return is(entry) === '[object Function]'
-  };
+const getCallbackList = require('./get-callback-list');
 
-  function isString (entry) {
-    return is(entry) === '[object String]'
-  };
+const toPathArray = require('./to-path-array');
+const toPathString = require('./to-path-string');
+const isPathMatched = require('./is-path-matched');
+const pushCallback = require('./push-callback');
+const callArgument = require('./call-argument');
 
-  function arrayLast (array) {
-    if (isArray(array) === false) {
-      throw new TypeError('first argument must be array')
+const hook = require('./hook');
+
+function Gesco () {
+    var exports = {};
+
+    var data = {};
+    var observers = {};
+    var computers = {};
+
+    function getObserversList (path) {
+        return getCallbackList(observers, path);
     }
 
-    return array[array.length - 1]
-  }
-
-  function forEach (object, callback, scope) {
-    if (isObject(object) === false) {
-      throw new TypeError('first argument must be object')
+    function getComputersList (path) {
+        return getCallbackList(computers, path);
     }
 
-    if (isFunction(callback) === false) {
-      throw new TypeError('callback must be function')
-    }
+    function call (callback) {
+        if(isFunction(callback) === false) {
+            throw new TypeError('callback must be function');
+        }
 
-    for (var key in object) {
-      if (object.hasOwnProperty(key)) {
-        callback.call(scope, object[key], key, object)
-      }
-    }
-  }
-
-  function map (object, callback, scope) {
-    if (isObject(object) === false) {
-      throw new TypeError('first argument must be object')
-    }
-
-    if (isFunction(callback) === false) {
-      throw new TypeError('callback must be function')
-    }
-
-    var output = {}
-
-    forEach(object, function (value, key) {
-      output[key] = callback.call(this, value, key, object)
-    }, scope)
-
-    return output
-  }
-
-  function hasProperty (object, path) {
-    var property, offset
-
-    if (isObject(object) === false) {
-      throw new TypeError('first argument must be object')
-    }
-
-    if (isArray(path) === false) {
-      throw new TypeError('path must be array')
-    }
-
-    for (offset = 0; offset < path.length; offset++) {
-      property = String(path[offset])
-      object = Object(object)
-
-      if (property in object) {
-        object = object[property]
-      } else {
-        return false
-      }
-    }
-
-    return true
-  }
-
-  function getProperty (object, path) {
-    var property, offset
-
-    if (isObject(object) === false) {
-      throw new TypeError('first argument must be object')
-    }
-
-    if (isArray(path) === false) {
-      throw new TypeError('path must be array')
-    }
-
-    if (hasProperty(object, path) === false) {
-      return
-    }
-
-    for (offset = 0; offset < path.length; offset++) {
-      property = String(path[offset])
-      object = Object(object)
-
-      object = object[property]
-    }
-
-    return object
-  };
-
-  function setProperty (object, path, value) {
-    var parentProperty, basePropertyKey
-
-    if (isArray(path) === false) {
-      throw new TypeError('path must be array')
-    }
-
-    if (path.length === 1) {
-      parentProperty = object
-      basePropertyKey = path
-    } else {
-      parentProperty = getProperty(object, path.slice(0, -1))
-      basePropertyKey = arrayLast(path)
-    }
-
-    if (isObject(parentProperty) === false) {
-      throw new Error('top-level property must be object')
-    }
-
-    if (basePropertyKey == null) {
-      throw new Error('base property key is null')
-    }
-
-    parentProperty[basePropertyKey] = value
-  }
-
-  function pathIsValid (path) {
-    var isValid
-
-    if (path == null || path.length === 0) {
-      throw new TypeError('path is null')
-    }
-
-    if (isString(path) === false && isArray(path) === false) {
-      throw new TypeError('path must be string or array')
-    }
-
-    if (isArray(path)) {
-      isValid = path.every(function (piece) {
-        return isString(piece) && piece.includes(DELIMITER) === false
-      })
-    } else {
-      isValid = path.includes(DELIMITER + DELIMITER) === false
-    }
-
-    if (isValid) {
-      return true
-    } else {
-      throw new Error('path error')
-    }
-  }
-
-  function pathToArray (path) {
-    if (pathIsValid(path)) {
-      return isString(path) ? path.split(DELIMITER) : path
-    }
-  }
-
-  function pathToString (path) {
-    if (pathIsValid(path)) {
-      return isArray(path) ? path.join(DELIMITER) : path
-    }
-  }
-
-  function isPathMatched (pathBase, pathCheck) {
-    pathBase = pathToArray(pathBase)
-    pathCheck = pathToArray(pathCheck)
-
-    return pathBase.every(function (piece, index) {
-      return piece === pathCheck[index]
-    })
-  };
-
-  function search (object, matchingCallback, checkingCallback) {
-    if (isObject(object) === false) {
-      throw new TypeError('first argument must be object')
-    }
-
-    if (isFunction(matchingCallback) === false) {
-      throw new TypeError('matching callback must be function')
-    }
-
-    if (isFunction(checkingCallback) === false) {
-      throw new TypeError('checking callback must be function')
-    }
-
-    forEach(object, function (value, key) {
-      if (checkingCallback(key)) {
-        matchingCallback(value, key, object)
-      }
-    })
-  }
-
-  function args (args, slice) {
-    return Array.prototype.slice.call(args, slice)
-  }
-
-  function Gesco () {
-    var exports = {}
-
-    var data = {}
-    var observers = {}
-
-    function hook (key, value) {
-      Object.defineProperty(exports, key, {
-        value: value
-      })
-    }
-
-    function callback (fn) {
-      return fn.apply(exports, args(arguments, 1))
+        return callback.apply(exports, args(arguments, 1));
     }
 
     function createComputer (path, observerPath, computer) {
-      return function (value) {
-        setProperty(data, pathToArray(path), callback(computer, value, pathToString(path), pathToString(observerPath)))
-      }
+        return function () {
+            setProperty(data, toPathArray(path), call(computer, get(observerPath), toPathString(path), toPathString(observerPath)));
+        };
     }
 
-    function addComputer (path, observerPath, computer) {
-      if (arguments.length === 2) {
-        computer = observerPath
-        observerPath = path
-      }
-
-      path = pathToString(path)
-      observerPath = pathToString(observerPath)
-
-      if (!isFunction(computer)) {
-        throw new TypeError('computer must be function')
-      }
-
-      getObserversList(observerPath).push(createComputer(path, observerPath, computer))
-    }
-
-    function hasObserversList (path) {
-      return pathToString(path) in observers
-    }
-
-    function getObserversList (path) {
-      path = pathToString(path)
-
-      if (hasObserversList(path) === false) {
-        observers[path] = []
-      }
-
-      return observers[path]
+    function createObserver (path, observer) {
+        return function () {
+            call(observer, get(path), toPathString(path));
+        };
     }
 
     function addObserver (path) {
-      path = pathToString(path)
-      var observers = args(arguments, 1)
-      var observersList = getObserversList(path)
+        var observers = args(arguments, 1);
 
-      observers.forEach(function (observer) {
-        if (isFunction(observer)) {
-          observersList.push(observer)
-        } else {
-          throw new TypeError('observer must be function')
-        }
-      })
+        path = toPathString(path);
+
+        pushCallback(getObserversList(path), observers.map(createObserver.bind(null, path)));
     }
 
-    function emitChanges (path) {
-      var pathArray = pathToArray(path)
+    function addComputer (path, observerPath, computer) {
+        path = toPathString(path);
 
-      search(observers, function (observersMatched, observersMatchedPath) {
-        observersMatched.forEach(function (observer) {
-          callback(observer, get(observersMatchedPath), observersMatchedPath)
-        })
-      }, isPathMatched.bind(null, pathArray))
+        if (arguments.length === 2) {
+            computer = observerPath;
+            observerPath = path;
+        }
+
+        observerPath = toPathString(observerPath);
+
+        if(isFunction(computer) === false) {
+            throw new TypeError('computer must be function');
+        }
+
+        pushCallback(getComputersList(observerPath), createComputer(path, observerPath, computer));
     }
 
-    function emit (path, emitCallback) {
-      if (emitCallback) {
-        if (isFunction(emitCallback)) {
-          callback(emitCallback, get(path))
 
-          emitChanges(path)
-        } else {
-          throw new TypeError('callback must be function')
+    function emitChanges (object, path) {
+        var pathArray = toPathArray(path), matchingCallback = isPathMatched.bind(null, pathArray);
+
+        search(object, function (matched) {
+            matched.forEach(callArgument);
+        }, matchingCallback);
+    }
+
+    function emit (path, callback) {
+        path = toPathArray(path);
+
+        if (callback) {
+            if (isFunction(callback)) {
+                call(callback, get(path), path);
+            }
+            else {
+                throw new TypeError('callback must be function');
+            }
         }
-      } else {
-        emitChanges(path)
-      }
+
+        emitChanges(computers, path);
+        emitChanges(observers, path);
     }
 
     function get (path) {
-      if (path === undefined) {
-        return data
-      }
+        if (path === undefined) {
+            return data;
+        }
 
-      return getProperty(data, pathToArray(path))
+        return getProperty(data, toPathArray(path));
     }
 
-    function set (path, value, observer) {
-      if (isObject(path)) {
-        return map(path, function (value, key) {
-          return set(key, value)
-        })
-      }
+    function set (path, value, observer, silence) {
+        if (isObject(path)) {
+            return map(path, (value, key) => set(key, value));
+        }
 
-      path = pathToArray(path)
+        path = toPathArray(path);
 
-      if (observer) {
-        addObserver(path, observer)
-      }
+        if (observer) {
+            addObserver(path, observer);
+        }
 
-      setProperty(data, path, value)
+        setProperty(data, path, value);
 
-      emitChanges(path)
+        if(silence !== true) {
+            emit(path);
+        }
 
-      return value
+        return value;
     }
 
     function toString () {
-      return JSON.stringify(data)
+        return JSON.stringify(data);
     }
 
-    hook('get', get)
-    hook('set', set)
-    hook('observe', addObserver)
-    hook('compute', addComputer)
-    hook('emit', emit)
-    hook('toString', toString)
+    hook('get', get, exports);
+    hook('set', set, exports);
+    hook('observe', addObserver, exports);
+    hook('compute', addComputer, exports);
+    hook('emit', emit, exports);
+    hook('toString', toString, exports);
 
-    return exports
-  }
+    hook('computers', computers, exports);
 
-  return Gesco
-})
+    return exports;
+}
+
+module.exports = Gesco;
+module.exports.default = Gesco;

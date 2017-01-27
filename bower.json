@@ -1,0 +1,36 @@
+{
+  "name": "gesco",
+  "version": "1.1",
+  "description": "Easy data manipulation to get, set, observe and compute",
+  "main": "./dist/gesco.js",
+  "moduleType": [
+    "amd",
+    "globals"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zaclummys/gesco.git"
+  },
+  "keywords": [
+    "data",
+    "manipulation",
+    "get",
+    "set",
+    "observe",
+    "compute"
+  ],
+  "author": "Isaac Ferreira (zaclummys)",
+  "license": "MIT",
+  "homepage": "https://github.com/zaclummys/gesco#readme",
+  "ignore": [
+    "**/.*",
+    "*.iml",
+    "examples",
+    "src",
+    "node_modules",
+    "gruntfile.js",
+    "index.js",
+    "package.json",
+    "webpack.*.js"
+  ]
+}

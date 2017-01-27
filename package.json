@@ -1,13 +1,25 @@
 {
   "name": "gesco",
-  "version": "1.0.2",
+  "version": "1.1",
   "description": "Easy data manipulation to get, set, observe and compute",
-  "main": "dist/gesco.js",
+  "main": "./index.js",
   "devDependencies": {
+    "babel-core": "^6.22.1",
+    "babel-loader": "^6.2.10",
+    "babel-preset-es2015": "^6.22.0",
+    "grunt": "^1.0.1",
+    "grunt-banner": "^0.6.0",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-uglify": "^2.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-eslint": "^19.0.0",
+    "grunt-webpack": "^2.0.0",
     "gulp": "^3.9.1",
     "gulp-uglify": "^2.0.1",
+    "load-grunt-tasks": "^3.5.2",
     "pump": "^1.0.2",
-    "standard": "^8.6.0"
+    "webpack": "^1.14.0",
+    "webpack-dev-server": "^1.16.2"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -29,5 +41,6 @@
   "bugs": {
     "url": "https://github.com/zaclummys/gesco/issues"
   },
-  "homepage": "https://github.com/zaclummys/gesco#readme"
+  "homepage": "https://github.com/zaclummys/gesco#readme",
+  "dependencies": {}
 }
