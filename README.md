@@ -166,7 +166,7 @@ gesco.emit('user.friends', function (friends) {
   friends.push('John Troe');
 });
 ```
-> **Note:** Please, do NOT do this! It'll emit changes twice. Use above examples instead.
+**Note:** Please, do NOT do this! It'll emit changes twice. Use above examples instead.
 ```js
 gesco.emit('user.friends', function (friends, path) {
   this.set(path, value);
