@@ -1,6 +1,6 @@
 {
   "name": "gesco",
-  "version": "1.1",
+  "version": "1.1.0",
   "description": "Easy data manipulation to get, set, observe and compute",
   "main": "./index.js",
   "devDependencies": {
