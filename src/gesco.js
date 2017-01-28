@@ -145,8 +145,6 @@ function Gesco () {
     hook('emit', emit, exports);
     hook('toString', toString, exports);
 
-    hook('computers', computers, exports);
-
     return exports;
 }
 
