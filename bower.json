@@ -1,6 +1,6 @@
 {
   "name": "gesco",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Easy data manipulation to get, set, observe and compute",
   "main": "./dist/gesco.js",
   "moduleType": [
@@ -24,7 +24,6 @@
   "homepage": "https://github.com/zaclummys/gesco#readme",
   "ignore": [
     "**/.*",
-    "*.iml",
     "examples",
     "src",
     "node_modules",

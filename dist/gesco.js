@@ -1,4 +1,4 @@
-/* gesco v1.1.0 | (c) 2017 by Isaac Ferreira */
+/* gesco v1.1.1 | (c) 2017 by Isaac Ferreira */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
