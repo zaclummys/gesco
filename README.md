@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/2461addcb34844f086d314fc9871cfdf)](https://www.codacy.com/app/zaclummys/gesco?utm_source=github.com&utm_medium=referral&utm_content=zaclummys/gesco&utm_campaign=badger)
 # gesco [![npm version](https://img.shields.io/npm/v/gesco.svg?style=flat-square)](https://www.npmjs.org/package/gesco) [![npm downloads](https://img.shields.io/npm/dm/gesco.svg?style=flat-square)](http://npm-stat.com/charts.html?package=gesco)
 
 Easy data manipulation to **get**, **set**, **observe** and **compute**
