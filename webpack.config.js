@@ -1,5 +1,6 @@
 /* global __dirname */
 
+const webpack = require('webpack');
 const path = require('path');
 
 module.exports = {
@@ -9,7 +10,7 @@ module.exports = {
             path: path.resolve(__dirname, 'dist'),
             filename: 'gesco.js',
             library: 'Gesco',
-            libraryTarget: 'umd',
+            libraryTarget: 'umd'
         },
         progress: false,
         module: {
@@ -23,6 +24,6 @@ module.exports = {
                     }
                 }
             ]
-        }
-    }
+        },
+    },
 };

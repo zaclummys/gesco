@@ -1,7 +1,7 @@
 {
   "name": "gesco",
-  "version": "1.1.1",
-  "description": "Easy data manipulation to get, set, observe and compute",
+  "version": "1.2.1",
+  "description": "Easy data manipulation to get, emit, set, compute and observe",
   "main": "./index.js",
   "devDependencies": {
     "babel-core": "^6.22.1",
@@ -32,6 +32,7 @@
     "data",
     "manipulation",
     "get",
+    "emit",
     "set",
     "observe",
     "compute"

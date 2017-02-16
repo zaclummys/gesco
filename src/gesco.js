@@ -1,152 +1,379 @@
-'use strict';
+/*    MISC    */
+const _hook = require('./hook');
 
+/*  IS UTILS  */
 const isFunction = require('./is-function');
 const isObject = require('./is-object');
+const isArray = require('./is-array');
 
-const args = require('./args');
-
-const map = require('./map');
-const search = require('./search');
-
+/*    PROPERTY UTILS    */
 const setProperty = require('./set-property');
 const getProperty = require('./get-property');
+const deleteProperty = require('./delete-property');
 
-const getCallbackList = require('./get-callback-list');
-
+/*    PATH UTILS    */
 const toPathArray = require('./to-path-array');
 const toPathString = require('./to-path-string');
 const isPathMatched = require('./is-path-matched');
-const pushCallback = require('./push-callback');
-const callArgument = require('./call-argument');
+const isPathEqual = require('./is-path-equal');
 
-const hook = require('./hook');
+/*    ARGUMENTS UTILS    */
+const args = require('./args');
+const batch = require('./batch');
+
+/*    ARRAY UTILS    */
+const wrap = require('./wrap');
+
+/*    OBJECT UTILS    */
+const forOwn = require('./for-own');
 
 function Gesco () {
     var exports = {};
 
-    var data = {};
-    var observers = {};
-    var computers = {};
+    var data = {}, computers = [], observers = [];
 
-    function getObserversList (path) {
-        return getCallbackList(observers, path);
-    }
-
-    function getComputersList (path) {
-        return getCallbackList(computers, path);
+    /*  UTILS   */
+    function hook (key, value) {
+        _hook(key, value, exports);
     }
 
     function call (callback) {
-        if(isFunction(callback) === false) {
-            throw new TypeError('callback must be function');
+        if (!isFunction(callback)) {
+            throw new TypeError();
         }
 
         return callback.apply(exports, args(arguments, 1));
     }
 
-    function createComputer (path, observerPath, computer) {
-        return function () {
-            setProperty(data, toPathArray(path), call(computer, get(observerPath), toPathString(path), toPathString(observerPath)));
-        };
-    }
 
-    function createObserver (path, observer) {
-        return function () {
-            call(observer, get(path), toPathString(path));
-        };
-    }
-
-    function addObserver (path) {
-        var observers = args(arguments, 1);
-
-        path = toPathString(path);
-
-        pushCallback(getObserversList(path), observers.map(createObserver.bind(null, path)));
-    }
-
-    function addComputer (path, observerPath, computer) {
-        path = toPathString(path);
-
-        if (arguments.length === 2) {
-            computer = observerPath;
-            observerPath = path;
-        }
-
-        observerPath = toPathString(observerPath);
-
-        if(isFunction(computer) === false) {
-            throw new TypeError('computer must be function');
-        }
-
-        pushCallback(getComputersList(observerPath), createComputer(path, observerPath, computer));
-    }
-
-
-    function emitChanges (object, path) {
-        var pathArray = toPathArray(path), matchingCallback = isPathMatched.bind(null, pathArray);
-
-        search(object, function (matched) {
-            matched.forEach(callArgument);
-        }, matchingCallback);
-    }
-
-    function emit (path, callback) {
-        path = toPathArray(path);
-
-        if (callback) {
-            if (isFunction(callback)) {
-                call(callback, get(path), path);
-            }
-            else {
-                throw new TypeError('callback must be function');
-            }
-        }
-
-        emitChanges(computers, path);
-        emitChanges(observers, path);
-    }
-
+    /*    GET    */
     function get (path) {
-        if (path === undefined) {
+        if(arguments.length === 0) {
             return data;
         }
 
         return getProperty(data, toPathArray(path));
     }
 
-    function set (path, value, observer, silence) {
-        if (isObject(path)) {
-            return map(path, (value, key) => set(key, value));
+
+    /*    EMIT    */
+    function emitChanges (arr, path, matchFn, excludeFn) {
+        path = toPathString(path);
+
+        if(!isArray(arr)) {
+            throw new TypeError();
         }
 
-        path = toPathArray(path);
-
-        if (observer) {
-            addObserver(path, observer);
+        if(!isFunction(matchFn)) {
+            throw new TypeError();
         }
 
-        setProperty(data, path, value);
-
-        if(silence !== true) {
-            emit(path);
+        if(excludeFn && !isFunction(excludeFn)) {
+            throw new TypeError();
         }
 
-        return value;
+        arr.forEach(function (item) {
+            if(matchFn(item, path)) {
+                if(excludeFn && excludeFn(item, path)) {
+                    return;
+                }
+
+                item.callback();
+            }
+        });
     }
 
-    function toString () {
+    function genericMatchFn (item, path) {
+        return isPathMatched(path, item.from);
+    }
+
+    function emitChangesToComputers (path, excludeFn) {
+        emitChanges(computers, path, genericMatchFn, excludeFn);
+    }
+
+    function emitChangesToObsevers (path, excludeFn) {
+        emitChanges(observers, path, genericMatchFn, excludeFn);
+    }
+ 
+    function emit (path, callback, excludeComputerFn, excludeObserverFn) {
+        path = wrap(path).map(toPathString);
+
+        var pathValue = path.map(get);
+
+        if(excludeComputerFn && !isFunction(excludeComputerFn)) {
+            throw new TypeError('excludeComputerFn must be function');
+        }
+
+        if(excludeObserverFn && !isFunction(excludeObserverFn)) {
+            throw new TypeError('excludeObserverFn must be function');
+        }
+
+        if(callback) {
+            if(!isFunction(callback)) {
+                throw new TypeError('callback must be function');
+            }
+
+            call.apply(null, [callback].concat(pathValue).concat(path));
+        }
+
+        path.forEach(function (currentPath) {
+            emitChangesToComputers(currentPath, excludeComputerFn);
+            emitChangesToObsevers(currentPath, excludeObserverFn);            
+        });
+
+        return exports;
+    }
+
+    /*    SET    */
+    function singleSet (path, value, silent = false) {
+        path = toPathString(path);
+
+        var pathArray = toPathArray(path);
+
+        if(hasComputerLinked(path)) {
+            throw new Error('computed property must not be set directly');
+        }
+
+        setProperty(data, pathArray, value);
+
+        if(silent === false) {
+            emit(path);
+        }
+    }
+
+    function batchSet (obj) {
+        if(!isObject(obj)) {
+            throw new TypeError('batch method called on non-object');
+        }
+
+        forOwn(obj, function (value, path) {
+            singleSet(path, value);
+        });
+    }
+
+    function set () {
+        batch(singleSet, batchSet, arguments);
+        return exports;
+    }
+
+
+    /*    COMPUTE    */
+    function hasComputer (toPath, fromPath) {
+        toPath = toPathString(toPath);
+
+        if(fromPath) {
+            fromPath = toPathString(fromPath);
+        }
+
+        return computers.some(function (computer) {
+            if(fromPath) {
+                return computer.to === toPath && computer.from === fromPath;
+            }
+            else {
+                return computer.to === toPath;
+            }
+        });
+    }
+
+    function hasComputerLinked (path) {
+        path = toPathString(path);
+
+        return computers.some(function (computer) {
+            return computer.to === path && computer.from !== path;
+        });
+    }
+
+    function wrapComputer (toPath, fromPath, computer) {
+        toPath = toPathString(toPath);
+        fromPath = toPathString(fromPath);
+
+        var pathArray = toPathArray(toPath);
+
+        return {
+            to: toPath,
+            from: fromPath,
+            callback: function () {
+                var valueComputed = call(computer, get(fromPath), toPath, fromPath);
+
+                setProperty(data, pathArray, valueComputed, true);
+
+                if(!isPathEqual(toPath, fromPath)) {
+                    emit(toPath);
+                }
+            }
+        };        
+    }
+
+    function singleCompute (toPath, fromPath, computer) {
+        if (arguments.length === 2) {
+            computer = fromPath;
+            fromPath = toPath;
+        }
+
+        toPath = toPathString(toPath);
+        fromPath = toPathString(fromPath);
+
+        if(!isFunction(computer)) {
+            throw new TypeError('computer must be function');
+        }
+
+        if(hasComputer(toPath)) {
+            throw new Error('this path has already been computed: ' + toPath);
+        }
+
+        computers.push(wrapComputer(toPath, fromPath, computer));
+    }
+
+    function batchCompute (obj) {
+        if(!isObject(obj)) {
+            throw new TypeError('batch method called on non-object');
+        }
+
+        forOwn(obj, function (value, fromPath) {
+            if(isFunction(value)) {
+                singleCompute(fromPath, value);
+            }
+            else if(isObject(value)) {
+                forOwn(value, function (computer, toPath) {
+                    singleCompute(toPath, fromPath, computer);
+                });
+            }
+            else {
+                throw new TypeError();
+            }
+        });        
+    }
+
+    function compute () {
+        batch(singleCompute, batchCompute, arguments);
+    }
+
+
+    /*    OBSERVE    */
+    function wrapObserver (path, observer) {
+        path = toPathString(path);
+
+        return {
+            to: path,
+            from: path,
+            callback: function () {
+                call(observer, get(path), path);
+            }
+        };
+    }
+
+    function pushObserver (path, observer) {
+        if(!isFunction(observer)) {
+            throw new TypeError('observer must be function');
+        }
+
+        observers.push(wrapObserver(path, observer));
+    }
+
+    function singleObserve (path, observers) {
+        path = toPathString(path);
+
+        wrap(observers).forEach(function (observer) {
+            pushObserver(path, observer);
+        });
+    }
+
+    function batchObserve (obj) {
+        if(!isObject(obj)) {
+            throw new TypeError('batch method called on non-object');
+        }
+
+        forOwn(obj, function (observers, path) {
+            singleObserve.apply(null, wrap(path).concat(observers));
+        });
+    }
+
+    function observe () {
+        batch(singleObserve, batchObserve, arguments);
+    }
+
+
+    /*    LINK    */
+    function singleLink (toPath, fromPath) {
+        toPath = toPathString(toPath);
+        fromPath = toPathString(fromPath);
+
+        if (isPathEqual(toPath, fromPath)) {
+            throw new Error('equal paths must not be linked');
+        }
+
+        if (hasComputer(toPath, fromPath)) {
+            throw new Error('these paths has already been linked');
+        }
+
+        if (hasComputer(fromPath, toPath)) {
+            throw new Error('two-way linking is not allowed');
+        }
+
+        singleCompute(toPath, fromPath, function (value) {
+            return value;
+        });
+    }
+
+    function batchLink (obj) {
+        if(!isObject(obj)) {
+            throw new TypeError('batch method called on non-object');
+        }
+
+        forOwn(obj, function (paths, fromPath) {
+            wrap(paths).forEach(function (toPath) {
+                singleLink(toPath, fromPath);
+            });
+        });        
+    }
+
+    function link () {
+        batch(singleLink, batchLink, arguments);
+
+        return exports;
+    }
+
+
+    /*    DELETE    */
+    function singleDelete (path, silent = false) {
+        deleteProperty(data, toPathArray(path));
+
+        if(silent === false) {
+            emit(path);
+        }
+    }
+
+    function batchDelete (deletes) {
+        wrap(deletes).forEach(singleDelete);
+    }
+
+    function _delete () {
+        batch(singleDelete, batchDelete, arguments);
+    }
+
+
+    /*  EXTRAS  */
+    function toString() {
         return JSON.stringify(data);
     }
 
-    hook('get', get, exports);
-    hook('set', set, exports);
-    hook('observe', addObserver, exports);
-    hook('compute', addComputer, exports);
-    hook('emit', emit, exports);
-    hook('toString', toString, exports);
+    hook('get', get);
+    hook('emit', emit);
+    hook('set', set);
+    hook('compute', compute);
+    hook('observe', observe);
+    hook('delete', _delete);
+    hook('link', link);
+    hook('toString', toString);
 
     return exports;
 }
 
+Gesco.path = {
+    toArray: toPathArray,
+    toString: toPathString,
+    isEqual: isPathEqual,
+    isMatched: isPathMatched
+};
+
 module.exports = Gesco;
-module.exports.default = Gesco;

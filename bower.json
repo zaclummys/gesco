@@ -1,7 +1,7 @@
 {
   "name": "gesco",
-  "version": "1.1.1",
-  "description": "Easy data manipulation to get, set, observe and compute",
+  "version": "1.2.1",
+  "description": "Easy data manipulation to get, emit, set, compute and observe",
   "main": "./dist/gesco.js",
   "moduleType": [
     "amd",
@@ -15,6 +15,7 @@
     "data",
     "manipulation",
     "get",
+    "emit",
     "set",
     "observe",
     "compute"

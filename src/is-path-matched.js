@@ -1,10 +1,8 @@
 const toPathArray = require('./to-path-array');
 
-module.exports = function isPathMatched (pathBase, pathCheck) {
-    pathBase = toPathArray(pathBase);
-    pathCheck = toPathArray(pathCheck);
+module.exports = function isPathMatched (pathOne, pathTwo) {
+    pathOne = toPathArray(pathOne);
+    pathTwo = toPathArray(pathTwo);
 
-    return pathBase.every(function (piece, index) {
-        return piece === pathCheck[index];
-    });
+    return pathOne.every((piece, index) => piece === pathTwo[index]);
 };

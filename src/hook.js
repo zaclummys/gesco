@@ -1,5 +1,8 @@
-module.exports = function hook (key, value, exports) {
-    Object.defineProperty(exports, key, {
-        value: value
+var defineProperty = Object.defineProperty;
+
+module.exports = function hook (key, value, obj, configurable) {
+    defineProperty(obj, key, {
+        value: value,
+        configurable: !!configurable
     });
 };

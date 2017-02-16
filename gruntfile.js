@@ -14,7 +14,7 @@ module.exports = function(grunt) {
         },
 
         uglify: {
-            my_target: {
+            target: {
                 files: {
                     'dist/gesco.min.js': ['dist/gesco.js']
                 }
@@ -46,18 +46,11 @@ module.exports = function(grunt) {
             }
         },
 
-        eslint: {
-            target: ['src/*.js'],
-            options: {
-                fix: true,
-            }
-        },
-
         watch: {
             build: {
                 files: ['src/*.js'],
                 tasks: ['build']
-            }
+            },
         },
 
         webpack: require('./webpack.config.js')

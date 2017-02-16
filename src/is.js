@@ -1,3 +1,5 @@
+var toString = Object.prototype.toString;
+
 module.exports = function is (entry) {
-    return Object.prototype.toString.call(entry);
+    return toString.call(entry);
 };
