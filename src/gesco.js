@@ -4,7 +4,6 @@ const _hook = require('./hook');
 /*  IS UTILS  */
 const isFunction = require('./is-function');
 const isObject = require('./is-object');
-const isArray = require('./is-array');
 const isBoolean = require('./is-boolean');
 
 /*    PROPERTY UTILS    */
@@ -118,7 +117,7 @@ function Gesco () {
         });
     }
 
-    function emit (arg) {
+    function emit () {
         batch(singleEmit, batchEmit, arguments);
 
         return exports;

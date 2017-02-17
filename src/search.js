@@ -25,4 +25,4 @@ module.exports = function search (arr, successFn, matchFn, excludeFn) {
             successFn(item);
         }
     });
-}
+};
