@@ -4,16 +4,12 @@ const isArray = require('./is-array');
 
 const WHITESPACE  = /\s/g;
 
-function hasWhitespace(str) {
-    return WHITESPACE.test(str) === true;
-}
-
 function isPathValidString (str, isPiece) {
     if(!isString(str)) {
         throw new TypeError('path is not valid');
     }
 
-    if(hasWhitespace(str)) {
+    if(WHITESPACE.test(str) === true) {
         throw new Error('path must no have whitespaces');
     }
 

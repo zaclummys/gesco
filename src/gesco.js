@@ -5,6 +5,7 @@ const _hook = require('./hook');
 const isFunction = require('./is-function');
 const isObject = require('./is-object');
 const isArray = require('./is-array');
+const isBoolean = require('./is-boolean');
 
 /*    PROPERTY UTILS    */
 const setProperty = require('./set-property');
@@ -23,6 +24,7 @@ const batch = require('./batch');
 
 /*    ARRAY UTILS    */
 const wrap = require('./wrap');
+const search = require('./search');
 
 /*    OBJECT UTILS    */
 const forOwn = require('./for-own');
@@ -57,48 +59,30 @@ function Gesco () {
 
 
     /*    EMIT    */
-    function emitChanges (arr, path, matchFn, excludeFn) {
-        path = toPathString(path);
-
-        if(!isArray(arr)) {
-            throw new TypeError();
-        }
-
-        if(!isFunction(matchFn)) {
-            throw new TypeError();
-        }
-
-        if(excludeFn && !isFunction(excludeFn)) {
-            throw new TypeError();
-        }
-
-        arr.forEach(function (item) {
-            if(matchFn(item, path)) {
-                if(excludeFn && excludeFn(item, path)) {
-                    return;
-                }
-
+    function emitChanges (arr, path, excludeFn) {
+        search(arr,
+            // successFn
+            function (item) {
                 item.callback();
-            }
-        });
-    }
-
-    function genericMatchFn (item, path) {
-        return isPathMatched(path, item.from);
+            },
+            // matchFn
+            function (item) {
+                return isPathMatched(path, item.from);
+            },
+            excludeFn
+        );
     }
 
     function emitChangesToComputers (path, excludeFn) {
-        emitChanges(computers, path, genericMatchFn, excludeFn);
+        emitChanges(computers, path, excludeFn);
     }
 
     function emitChangesToObsevers (path, excludeFn) {
-        emitChanges(observers, path, genericMatchFn, excludeFn);
+        emitChanges(observers, path, excludeFn);
     }
- 
-    function emit (path, callback, excludeComputerFn, excludeObserverFn) {
-        path = wrap(path).map(toPathString);
 
-        var pathValue = path.map(get);
+    function singleEmit (path, callback, excludeComputerFn, excludeObserverFn) {
+        path = toPathString(path);
 
         if(excludeComputerFn && !isFunction(excludeComputerFn)) {
             throw new TypeError('excludeComputerFn must be function');
@@ -113,19 +97,40 @@ function Gesco () {
                 throw new TypeError('callback must be function');
             }
 
-            call.apply(null, [callback].concat(pathValue).concat(path));
+            call(callback, get(path), path);
         }
 
-        path.forEach(function (currentPath) {
-            emitChangesToComputers(currentPath, excludeComputerFn);
-            emitChangesToObsevers(currentPath, excludeObserverFn);            
+        emitChangesToComputers(path, excludeComputerFn);
+        emitChangesToObsevers(path, excludeObserverFn);
+    }
+
+    function batchEmit (obj) {
+        if(!isObject(obj)) {
+            throw new TypeError('batch method called on non-object');
+        }
+
+        forOwn(obj, function (callback, path) {
+            var callable = isFunction(callback);
+
+            if(callback === true || callable) {
+                singleEmit(path, callable && callback);
+            }
         });
+    }
+
+    function emit (arg) {
+        batch(singleEmit, batchEmit, arguments);
 
         return exports;
     }
 
+
     /*    SET    */
     function singleSet (path, value, silent = false) {
+        if(!isBoolean(silent)) {
+            throw new TypeError('silent must be boolean');
+        }
+
         path = toPathString(path);
 
         var pathArray = toPathArray(path);
@@ -136,7 +141,7 @@ function Gesco () {
 
         setProperty(data, pathArray, value);
 
-        if(silent === false) {
+        if(silent !== true) {
             emit(path);
         }
     }
@@ -153,6 +158,7 @@ function Gesco () {
 
     function set () {
         batch(singleSet, batchSet, arguments);
+
         return exports;
     }
 
@@ -201,7 +207,7 @@ function Gesco () {
                     emit(toPath);
                 }
             }
-        };        
+        };
     }
 
     function singleCompute (toPath, fromPath, computer) {
@@ -241,11 +247,13 @@ function Gesco () {
             else {
                 throw new TypeError();
             }
-        });        
+        });
     }
 
     function compute () {
         batch(singleCompute, batchCompute, arguments);
+
+        return exports;
     }
 
 
@@ -290,6 +298,8 @@ function Gesco () {
 
     function observe () {
         batch(singleObserve, batchObserve, arguments);
+
+        return exports;
     }
 
 
@@ -324,7 +334,7 @@ function Gesco () {
             wrap(paths).forEach(function (toPath) {
                 singleLink(toPath, fromPath);
             });
-        });        
+        });
     }
 
     function link () {
@@ -336,15 +346,25 @@ function Gesco () {
 
     /*    DELETE    */
     function singleDelete (path, silent = false) {
+        if(!isBoolean(silent)) {
+            throw new TypeError('silent must be boolean');
+        }
+
         deleteProperty(data, toPathArray(path));
 
-        if(silent === false) {
+        if(silent !== true) {
             emit(path);
         }
     }
 
-    function batchDelete (deletes) {
-        wrap(deletes).forEach(singleDelete);
+    function batchDelete (obj) {
+        if(!isObject(obj)) {
+            throw new TypeError('batch method called on non-object');
+        }
+
+        forOwn(obj, function (silent, path) {
+            singleDelete(path, silent);
+        });
     }
 
     function _delete () {
@@ -353,7 +373,7 @@ function Gesco () {
 
 
     /*  EXTRAS  */
-    function toString() {
+    function toString () {
         return JSON.stringify(data);
     }
 

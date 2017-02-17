@@ -1,4 +1,4 @@
-/* gesco v1.2.1 | (c) 2017 by Isaac Ferreira */
+/* gesco v1.2.2 | (c) 2017 by Isaac Ferreira */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -72,27 +72,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	var isFunction = __webpack_require__(3);
 	var isObject = __webpack_require__(5);
 	var isArray = __webpack_require__(6);
+	var isBoolean = __webpack_require__(7);
 
 	/*    PROPERTY UTILS    */
-	var setProperty = __webpack_require__(7);
-	var getProperty = __webpack_require__(10);
-	var deleteProperty = __webpack_require__(11);
+	var setProperty = __webpack_require__(8);
+	var getProperty = __webpack_require__(11);
+	var deleteProperty = __webpack_require__(12);
 
 	/*    PATH UTILS    */
-	var toPathArray = __webpack_require__(12);
-	var toPathString = __webpack_require__(16);
-	var isPathMatched = __webpack_require__(17);
-	var isPathEqual = __webpack_require__(18);
+	var toPathArray = __webpack_require__(13);
+	var toPathString = __webpack_require__(17);
+	var isPathMatched = __webpack_require__(18);
+	var isPathEqual = __webpack_require__(19);
 
 	/*    ARGUMENTS UTILS    */
-	var args = __webpack_require__(19);
-	var batch = __webpack_require__(20);
+	var args = __webpack_require__(20);
+	var batch = __webpack_require__(21);
 
 	/*    ARRAY UTILS    */
-	var wrap = __webpack_require__(21);
+	var wrap = __webpack_require__(22);
+	var search = __webpack_require__(23);
 
 	/*    OBJECT UTILS    */
-	var forOwn = __webpack_require__(22);
+	var forOwn = __webpack_require__(24);
 
 	function Gesco() {
 	    var exports = {};
@@ -124,48 +126,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /*    EMIT    */
-	    function emitChanges(arr, path, matchFn, excludeFn) {
-	        path = toPathString(path);
-
-	        if (!isArray(arr)) {
-	            throw new TypeError();
-	        }
-
-	        if (!isFunction(matchFn)) {
-	            throw new TypeError();
-	        }
-
-	        if (excludeFn && !isFunction(excludeFn)) {
-	            throw new TypeError();
-	        }
-
-	        arr.forEach(function (item) {
-	            if (matchFn(item, path)) {
-	                if (excludeFn && excludeFn(item, path)) {
-	                    return;
-	                }
-
-	                item.callback();
-	            }
-	        });
-	    }
-
-	    function genericMatchFn(item, path) {
-	        return isPathMatched(path, item.from);
+	    function emitChanges(arr, path, excludeFn) {
+	        search(arr,
+	        // successFn
+	        function (item) {
+	            item.callback();
+	        },
+	        // matchFn
+	        function (item) {
+	            return isPathMatched(path, item.from);
+	        }, excludeFn);
 	    }
 
 	    function emitChangesToComputers(path, excludeFn) {
-	        emitChanges(computers, path, genericMatchFn, excludeFn);
+	        emitChanges(computers, path, excludeFn);
 	    }
 
 	    function emitChangesToObsevers(path, excludeFn) {
-	        emitChanges(observers, path, genericMatchFn, excludeFn);
+	        emitChanges(observers, path, excludeFn);
 	    }
 
-	    function emit(path, callback, excludeComputerFn, excludeObserverFn) {
-	        path = wrap(path).map(toPathString);
-
-	        var pathValue = path.map(get);
+	    function singleEmit(path, callback, excludeComputerFn, excludeObserverFn) {
+	        path = toPathString(path);
 
 	        if (excludeComputerFn && !isFunction(excludeComputerFn)) {
 	            throw new TypeError('excludeComputerFn must be function');
@@ -180,13 +162,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	                throw new TypeError('callback must be function');
 	            }
 
-	            call.apply(null, [callback].concat(pathValue).concat(path));
+	            call(callback, get(path), path);
 	        }
 
-	        path.forEach(function (currentPath) {
-	            emitChangesToComputers(currentPath, excludeComputerFn);
-	            emitChangesToObsevers(currentPath, excludeObserverFn);
+	        emitChangesToComputers(path, excludeComputerFn);
+	        emitChangesToObsevers(path, excludeObserverFn);
+	    }
+
+	    function batchEmit(obj) {
+	        if (!isObject(obj)) {
+	            throw new TypeError('batch method called on non-object');
+	        }
+
+	        forOwn(obj, function (callback, path) {
+	            var callable = isFunction(callback);
+
+	            if (callback === true || callable) {
+	                singleEmit(path, callable && callback);
+	            }
 	        });
+	    }
+
+	    function emit(arg) {
+	        batch(singleEmit, batchEmit, arguments);
 
 	        return exports;
 	    }
@@ -194,6 +192,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /*    SET    */
 	    function singleSet(path, value) {
 	        var silent = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
+	        if (!isBoolean(silent)) {
+	            throw new TypeError('silent must be boolean');
+	        }
 
 	        path = toPathString(path);
 
@@ -205,7 +207,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        setProperty(data, pathArray, value);
 
-	        if (silent === false) {
+	        if (silent !== true) {
 	            emit(path);
 	        }
 	    }
@@ -222,6 +224,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    function set() {
 	        batch(singleSet, batchSet, arguments);
+
 	        return exports;
 	    }
 
@@ -311,6 +314,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    function compute() {
 	        batch(singleCompute, batchCompute, arguments);
+
+	        return exports;
 	    }
 
 	    /*    OBSERVE    */
@@ -354,6 +359,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    function observe() {
 	        batch(singleObserve, batchObserve, arguments);
+
+	        return exports;
 	    }
 
 	    /*    LINK    */
@@ -400,15 +407,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	    function singleDelete(path) {
 	        var silent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
+	        if (!isBoolean(silent)) {
+	            throw new TypeError('silent must be boolean');
+	        }
+
 	        deleteProperty(data, toPathArray(path));
 
-	        if (silent === false) {
+	        if (silent !== true) {
 	            emit(path);
 	        }
 	    }
 
-	    function batchDelete(deletes) {
-	        wrap(deletes).forEach(singleDelete);
+	    function batchDelete(obj) {
+	        if (!isObject(obj)) {
+	            throw new TypeError('batch method called on non-object');
+	        }
+
+	        forOwn(obj, function (silent, path) {
+	            singleDelete(path, silent);
+	        });
 	    }
 
 	    function _delete() {
@@ -510,20 +527,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var property = __webpack_require__(8);
+	var is = __webpack_require__(4);
 
-	module.exports = function setProperty(object, path, value) {
-	    var ignoreError = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-
-	    property(object, path, function (parentProperty, basePropertyName) {
-	        if (parentProperty instanceof Object) {
-	            parentProperty[basePropertyName] = value;
-	        } else {
-	            if (ignoreError === false) {
-	                throw new TypeError('top-level property must be object');
-	            }
-	        }
-	    });
+	module.exports = function isBoolean(entry) {
+	    return is(entry) == '[object Boolean]';
 	};
 
 /***/ },
@@ -532,9 +539,29 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	var property = __webpack_require__(9);
+
+	module.exports = function setProperty(object, path, value, ignoreError) {
+	    property(object, path, function (parentProperty, basePropertyName) {
+	        if (parentProperty instanceof Object) {
+	            parentProperty[basePropertyName] = value;
+	        } else {
+	            if (!ignoreError) {
+	                throw new TypeError('top-level property must be object');
+	            }
+	        }
+	    });
+	};
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	var isObject = __webpack_require__(5);
 	var isArray = __webpack_require__(6);
-	var arrayLast = __webpack_require__(9);
+	var arrayLast = __webpack_require__(10);
 	var isFunction = __webpack_require__(3);
 
 	function pick(object, path) {
@@ -590,31 +617,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var isArray = __webpack_require__(6);
 
-	module.exports = function arrayLast(array) {
-	    if (!isArray(array)) {
+	module.exports = function arrayLast(arr) {
+	    if (!isArray(arr)) {
 	        throw new TypeError();
 	    }
 
-	    return array[array.length - 1];
+	    return arr[arr.length - 1];
 	};
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var property = __webpack_require__(8);
+	var property = __webpack_require__(9);
 
-	module.exports = function getProperty(object, path) {
-	    return property(object, path, function (parentProperty, basePropertyName) {
+	module.exports = function getProperty(obj, path) {
+	    return property(obj, path, function (parentProperty, basePropertyName) {
 	        if (parentProperty instanceof Object) {
 	            return parentProperty[basePropertyName];
 	        } else {
@@ -624,28 +651,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var property = __webpack_require__(8);
-
-	module.exports = function deleteProperty(object, path) {
-	    property(object, path, function (parentProperty, basePropertyKey) {
-	        delete parentProperty[basePropertyKey];
-	    });
-	};
-
-/***/ },
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var DELIMITER = __webpack_require__(13);
-	var isString = __webpack_require__(14);
-	var isPathValid = __webpack_require__(15);
+	var property = __webpack_require__(9);
+
+	module.exports = function deleteProperty(obj, path) {
+	    property(obj, path, function (parentProperty, basePropertyName) {
+	        delete parentProperty[basePropertyName];
+	    });
+	};
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var DELIMITER = __webpack_require__(14);
+	var isString = __webpack_require__(15);
+	var isPathValid = __webpack_require__(16);
 
 	module.exports = function toPathArray(path) {
 	    if (isPathValid(path)) {
@@ -654,7 +681,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -662,7 +689,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = '.';
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -674,27 +701,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var DELIMITER = __webpack_require__(13);
-	var isString = __webpack_require__(14);
+	var DELIMITER = __webpack_require__(14);
+	var isString = __webpack_require__(15);
 	var isArray = __webpack_require__(6);
 
 	var WHITESPACE = /\s/g;
-
-	function hasWhitespace(str) {
-	    return WHITESPACE.test(str) === true;
-	}
 
 	function isPathValidString(str, isPiece) {
 	    if (!isString(str)) {
 	        throw new TypeError('path is not valid');
 	    }
 
-	    if (hasWhitespace(str)) {
+	    if (WHITESPACE.test(str) === true) {
 	        throw new Error('path must no have whitespaces');
 	    }
 
@@ -726,14 +749,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var DELIMITER = __webpack_require__(13);
+	var DELIMITER = __webpack_require__(14);
 	var isArray = __webpack_require__(6);
-	var isPathValid = __webpack_require__(15);
+	var isPathValid = __webpack_require__(16);
 
 	module.exports = function toPathString(path) {
 	    if (isPathValid(path)) {
@@ -742,12 +765,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toPathArray = __webpack_require__(12);
+	var toPathArray = __webpack_require__(13);
 
 	module.exports = function isPathMatched(pathOne, pathTwo) {
 	    pathOne = toPathArray(pathOne);
@@ -759,19 +782,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var toPathString = __webpack_require__(16);
+	var toPathString = __webpack_require__(17);
 
 	module.exports = function isPathEqual(pathOne, pathTwo) {
 	    return toPathString(pathOne) === toPathString(pathTwo);
 	};
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -783,12 +806,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var isFunction = __webpack_require__(3);
+	var isObject = __webpack_require__(5);
 
 	module.exports = function batch(singleCallback, batchCallback, args, thisArg) {
 	    if (!isFunction(batchCallback)) {
@@ -799,17 +823,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        throw new TypeError();
 	    }
 
-	    if (args == null) {
-	        throw new TypeError();
+	    if (args == null || args.length === 0) {
+	        throw new Error('no arguments');
 	    }
 
-	    var callback = args.length > 1 ? singleCallback : batchCallback;
+	    var callback = args.length === 1 && isObject(args[0]) ? batchCallback : singleCallback;
 
 	    return callback.apply(thisArg, args);
 	};
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -825,13 +849,48 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var forIn = __webpack_require__(23);
-	var has = __webpack_require__(24);
+	var isFunction = __webpack_require__(3);
+	var isArray = __webpack_require__(6);
+
+	module.exports = function search(arr, successFn, matchFn, excludeFn) {
+	    if (!isArray(arr)) {
+	        throw new TypeError();
+	    }
+
+	    if (!isFunction(successFn)) {
+	        throw new TypeError();
+	    }
+
+	    if (!isFunction(matchFn)) {
+	        throw new TypeError();
+	    }
+
+	    var hasExcludeFn = !!excludeFn;
+
+	    if (hasExcludeFn && !isFunction(excludeFn)) {
+	        throw new TypeError();
+	    }
+
+	    arr.forEach(function (item) {
+	        if (matchFn(item) && (hasExcludeFn && excludeFn(item)) === false) {
+	            successFn(item);
+	        }
+	    });
+	};
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var forIn = __webpack_require__(25);
+	var has = __webpack_require__(26);
 	var isFunction = __webpack_require__(3);
 
 	module.exports = function forOwn(object, callback, thisArg) {
@@ -847,7 +906,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 23 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -867,7 +926,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 24 */
+/* 26 */
 /***/ function(module, exports) {
 
 	"use strict";

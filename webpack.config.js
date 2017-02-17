@@ -1,5 +1,3 @@
-/* global __dirname */
-
 const webpack = require('webpack');
 const path = require('path');
 

@@ -1,9 +1,9 @@
 const isArray = require('./is-array');
 
-module.exports = function arrayLast (array) {
-    if (!isArray(array)) {
+module.exports = function arrayLast (arr) {
+    if (!isArray(arr)) {
         throw new TypeError();
     }
 
-    return array[array.length - 1];
+    return arr[arr.length - 1];
 };

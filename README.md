@@ -160,25 +160,22 @@ gesco.compute('user.nameWithoutSpaces', 'user.name', function (name) {
 
 ##### **gesco.emit(path)**
 ```js
-// Pushing item to array (without side-effects), then emitting changes to observers
+// Pushing item to array (without side-effects), then emitting changes
 var friends = gesco.get('user.friends');
 friends.push('John Troe');
 
 gesco.emit('user.friends');
 
-// Setting sub-property (without side-effects), then emitting changes to observers
+// Setting sub-property (without side-effects), then emitting changes
 var user = gesco.get('user');
 user.name = 'John Doe';
 
 gesco.emit('user');
-
-// Emitting multiples changes
-gesco.emit(['foo', 'bar']);
 ```
 
 ##### **gesco.emit(path, callback)**
 ```js
-// Executing callback, then emitting changes to observers synchronously
+// Executing callback, then emitting changes synchronously
 
 gesco.emit('user.friends', function (friends) {
     friends.push('John Troe');
@@ -187,8 +184,6 @@ gesco.emit('user.friends', function (friends) {
 
 ##### **gesco.emit(path, callback, excludeComputerFn, excludeObserverFn)**
 ```js
-// Executing callback, then emitting changes to observers synchronously
-
 // The path 'friendsLengt' will not be affected by change
 var excludeComputerFn = function (computer) {
     return computer.to === 'friendsLength';
@@ -199,10 +194,25 @@ var excludeObserverFn = function (observer) {
     return observer.from === 'user.friends';
 }
 
+// Executing callback, then emitting changes synchronously
 gesco.emit('user.friends', function (friends) {
     friends.push('John Troe');
 }, excludeComputerFn, excludeObserverFn);
 ```
+
+##### **gesco.emit(batch)**
+```js
+gesco.emit({
+    //  Emitting changes (the value must be TRUE)
+    bar: true
+
+    // Executing callback, then emitting changes synchronously
+    foo: function (foo) {
+        foo.bar = true;        
+    }
+});
+```
+
 
 ----------
 
@@ -231,13 +241,23 @@ gesco.link({
 ----------
 
 
-##### **gesco.delete(path)**
+##### **gesco.delete(path, silent)**
 ```js
 // Deleting an path
 gesco.delete('user.name');
 
+// Deleting an path silently
+gesco.delete('user.friends', true);
+```
+
+##### **gesco.delete(batch)**
+```js
 // Deleting multiples paths
-gesco.delete(['foo', 'bar', 'foobar']);
+gesco.delete({
+    // path    // silent
+    'foo.bar': false,
+    'bar.foo': true,
+});
 ```
 
 
