@@ -71,11 +71,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	/*  IS UTILS  */
 	var isFunction = __webpack_require__(3);
 	var isObject = __webpack_require__(5);
-	var isArray = __webpack_require__(6);
-	var isBoolean = __webpack_require__(7);
+	var isBoolean = __webpack_require__(6);
 
 	/*    PROPERTY UTILS    */
-	var setProperty = __webpack_require__(8);
+	var setProperty = __webpack_require__(7);
 	var getProperty = __webpack_require__(11);
 	var deleteProperty = __webpack_require__(12);
 
@@ -183,7 +182,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        });
 	    }
 
-	    function emit(arg) {
+	    function emit() {
 	        batch(singleEmit, batchEmit, arguments);
 
 	        return exports;
@@ -517,8 +516,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var is = __webpack_require__(4);
 
-	module.exports = function isArray(entry) {
-	    return is(entry) === '[object Array]';
+	module.exports = function isBoolean(entry) {
+	    return is(entry) == '[object Boolean]';
 	};
 
 /***/ },
@@ -527,19 +526,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var is = __webpack_require__(4);
-
-	module.exports = function isBoolean(entry) {
-	    return is(entry) == '[object Boolean]';
-	};
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var property = __webpack_require__(9);
+	var property = __webpack_require__(8);
 
 	module.exports = function setProperty(object, path, value, ignoreError) {
 	    property(object, path, function (parentProperty, basePropertyName) {
@@ -554,13 +541,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 9 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var isObject = __webpack_require__(5);
-	var isArray = __webpack_require__(6);
+	var isArray = __webpack_require__(9);
 	var arrayLast = __webpack_require__(10);
 	var isFunction = __webpack_require__(3);
 
@@ -617,12 +604,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var is = __webpack_require__(4);
+
+	module.exports = function isArray(entry) {
+	    return is(entry) === '[object Array]';
+	};
+
+/***/ },
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var isArray = __webpack_require__(6);
+	var isArray = __webpack_require__(9);
 
 	module.exports = function arrayLast(arr) {
 	    if (!isArray(arr)) {
@@ -638,7 +637,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var property = __webpack_require__(9);
+	var property = __webpack_require__(8);
 
 	module.exports = function getProperty(obj, path) {
 	    return property(obj, path, function (parentProperty, basePropertyName) {
@@ -656,7 +655,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var property = __webpack_require__(9);
+	var property = __webpack_require__(8);
 
 	module.exports = function deleteProperty(obj, path) {
 	    property(obj, path, function (parentProperty, basePropertyName) {
@@ -708,7 +707,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var DELIMITER = __webpack_require__(14);
 	var isString = __webpack_require__(15);
-	var isArray = __webpack_require__(6);
+	var isArray = __webpack_require__(9);
 
 	var WHITESPACE = /\s/g;
 
@@ -755,7 +754,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var DELIMITER = __webpack_require__(14);
-	var isArray = __webpack_require__(6);
+	var isArray = __webpack_require__(9);
 	var isPathValid = __webpack_require__(16);
 
 	module.exports = function toPathString(path) {
@@ -838,7 +837,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var isArray = __webpack_require__(6);
+	var isArray = __webpack_require__(9);
 
 	module.exports = function wrap(entry) {
 	    if (entry == null) {
@@ -855,7 +854,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var isFunction = __webpack_require__(3);
-	var isArray = __webpack_require__(6);
+	var isArray = __webpack_require__(9);
 
 	module.exports = function search(arr, successFn, matchFn, excludeFn) {
 	    if (!isArray(arr)) {
