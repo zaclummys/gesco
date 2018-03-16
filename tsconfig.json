@@ -18,8 +18,7 @@
         "moduleResolution": "node",
         
         "lib": [
-            "esnext",
-            "dom",
+            "esnext"
         ],
         
         "outDir": "dist",
