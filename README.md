@@ -18,7 +18,7 @@ gesco.get('foo.bar');
 ---
 
 #### `gesco.delete(path: PathLike, silently: boolean = false)`
-Delete the value stored in the path. See [silently](#silently).
+Delete the value stored in the path. See [silence](#silence).
 ```js
 gesco.delete('foo.bar');
 ```
