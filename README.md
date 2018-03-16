@@ -9,8 +9,6 @@ $ npm install gesco
 ```
 ## API
 
----
-
 #### `gesco.get<T = any>(path: PathLike): T`
 Get the value stored in the path.
 ```js
