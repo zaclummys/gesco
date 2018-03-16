@@ -1,6 +1,6 @@
 {
     "name": "gesco",
-    "version": "2.0.0-beta",
+    "version": "2.0.0-beta.1",
     "description": "Easy data manipulation to get, emit, set, compute and observe",
     "main": "dist/index.js",
     "types": "./dist/index.d.ts",
