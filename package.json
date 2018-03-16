@@ -1,0 +1,21 @@
+{
+    "name": "gesco",
+    "dependencies": {
+        "dot-prop": "latest"
+    },
+    "devDependencies": {
+        "@types/dot-prop": "latest",
+        "benchmark": "latest",
+        "chai": "^4.1.2",
+        "chai-spies": "^1.0.0",
+        "mocha": "^5.0.4",
+        "typescript": "latest"
+    },
+    "scripts": {
+        "build": "tsc",
+        "test": "mocha"
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "version": "1.0.0-beta"
+}

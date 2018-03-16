@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "strict": true,
+
+        "esModuleInterop": true,
+        
+        "noImplicitReturns": true,
+        
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,        
+        
+        "forceConsistentCasingInFileNames": true,
+        
+        "target": "es5",
+        
+        "module": "commonjs",
+        "moduleResolution": "node",
+        
+        "lib": [
+            "esnext",
+            "dom",
+        ],
+        
+        "outDir": "dist",
+    }
+}
